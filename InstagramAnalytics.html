@@ -1,112 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Instagram Relationships Analyzer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen p-8">
+  </head>
+  <body class="bg-gray-100 min-h-screen p-8">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl text-center font-bold text-gray-800 mb-4">Instagram Relationships Analyzer</h1>
-        
-        <!-- File Upload Section -->
-        <div id="uploadSection"></div>
+      <h1 class="text-3xl text-center font-bold text-gray-800 mb-4">
+        Instagram Relationships Analyzer
+      </h1>
 
-        <!-- Status Section -->
-        <div id="statusSection" class="mb-8 hidden"></div>
+      <!-- File Upload Section -->
+      <div id="uploadSection"></div>
 
-        <!-- Stats Summary -->
-        <div id="statsSummary" class="grid grid-cols-4 gap-4 mb-8 hidden">
-            <!-- Will be filled dynamically -->
+      <!-- Status Section -->
+      <div id="statusSection" class="mb-8 hidden"></div>
+
+      <!-- Stats Summary -->
+      <div
+        id="statsSummary"
+        class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 hidden"
+      >
+        <!-- Will be filled dynamically -->
+      </div>
+
+      <!-- Data Display Section -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <!-- Followers Section -->
+        <div class="bg-white rounded-lg shadow-lg p-4">
+          <h2 class="text-xl text-center font-semibold mb-4 text-gray-800">Followers</h2>
+          <div id="followersList" class="overflow-y-auto h-[500px] pr-2"></div>
         </div>
 
-        <!-- Data Display Section -->
-        <div class="grid grid-cols-2 gap-8">
-            <!-- Followers Section -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800">Followers</h2>
-                <div id="followersList" class="overflow-y-auto h-[500px] pr-2"></div>
-            </div>
-
-            <!-- Following Section -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800">Following</h2>
-                <div id="followingList" class="overflow-y-auto h-[500px] pr-2"></div>
-            </div>
-
-            <!-- Not Following Me Back Section -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800">Not Following Me Back</h2>
-                <div id="notFollowingMeList" class="overflow-y-auto h-[500px] pr-2"></div>
-            </div>
-
-            <!-- Not Following Back Section -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800">I'm Not Following Back</h2>
-                <div id="notFollowingBackList" class="overflow-y-auto h-[500px] pr-2"></div>
-            </div>
+        <!-- Following Section -->
+        <div class="bg-white rounded-lg shadow-lg p-4">
+          <h2 class="text-xl text-center mb-4 text-gray-800">Following</h2>
+          <div id="followingList" class="overflow-y-auto h-[500px] pr-2"></div>
         </div>
+
+        <!-- Not Following Me Back Section -->
+        <div class="bg-white rounded-lg shadow-lg p-4">
+          <h2 class="text-xl text-center font-semibold mb-4 text-gray-800">
+            Not Following Me Back
+          </h2>
+          <div
+            id="notFollowingMeList"
+            class="overflow-y-auto h-[500px] pr-2"
+          ></div>
+        </div>
+
+        <!-- Not Following Back Section -->
+        <div class="bg-white rounded-lg shadow-lg p-4">
+          <h2 class="text-xl text-center font-semibold mb-4 text-gray-800">
+            I'm Not Following Back
+          </h2>
+          <div
+            id="notFollowingBackList"
+            class="overflow-y-auto h-[500px] pr-2"
+          ></div>
+        </div>
+      </div>
     </div>
 
     <script>
-        // Utility functions
-        const utils = {
-            formatDate: timestamp => new Date(timestamp * 1000).toLocaleDateString(),
-            createElement: (tag, className = '') => {
-                const element = document.createElement(tag);
-                if (className) element.className = className;
-                return element;
-            },
-            dataExtractors: {
-                followers: data => Array.isArray(data) ? data : [],
-                following: data => data.relationships_following || []
-            },
-            getUserData: (item) => item.string_list_data?.[0] || null,
-            getUserName: (userData) => userData.value,
-            compareArrays: (arr1, arr2) => {
-                const set2 = new Set(arr2);
-                return arr1.filter(item => !set2.has(item));
-            }
-        };
+      // Utility functions
+      const utils = {
+        formatDate: (timestamp) => {
+          const date = new Date(timestamp * 1000);
+          const options = { day: '2-digit', month: 'short', year: 'numeric' };
+          return date.toLocaleDateString('en-GB', options);
+        },
+        createElement: (tag, className = '') => {
+          const element = document.createElement(tag);
+          if (className) element.className = className;
+          return element;
+        },
+        dataExtractors: {
+          followers: (data) => (Array.isArray(data) ? data : []),
+          following: (data) => data.relationships_following || [],
+        },
+        getUserData: (item) => item.string_list_data?.[0] || null,
+        getUserName: (userData) => userData.value,
+        compareArrays: (arr1, arr2) => {
+          const set2 = new Set(arr2);
+          return arr1.filter((item) => !set2.has(item));
+        },
+      };
 
-        // Stats Component
-        class StatsComponent {
-            constructor() {
-                this.container = document.getElementById('statsSummary');
-            }
+      // Stats Component
+      class StatsComponent {
+        constructor() {
+          this.container = document.getElementById('statsSummary');
+        }
 
-            show() {
-                this.container.classList.remove('hidden');
-            }
+        show() {
+          this.container.classList.remove('hidden');
+        }
 
-            update(stats) {
-                this.container.innerHTML = Object.entries(stats).map(([key, value]) => `
+        update(stats) {
+          this.container.innerHTML = Object.entries(stats)
+            .map(
+              ([key, value]) => `
                     <div class="bg-white rounded-lg shadow p-4">
                         <div class="text-2xl font-bold text-gray-800">${value}</div>
                         <div class="text-gray-600">${key}</div>
                     </div>
-                `).join('');
-                this.show();
-            }
+                `
+            )
+            .join('');
+          this.show();
+        }
+      }
+
+      // Data Display Component
+      class DataDisplayComponent {
+        constructor(containerId) {
+          this.container = document.getElementById(containerId);
         }
 
-        // Data Display Component
-        class DataDisplayComponent {
-            constructor(containerId) {
-                this.container = document.getElementById(containerId);
-            }
+        clear() {
+          this.container.innerHTML = '';
+        }
 
-            clear() {
-                this.container.innerHTML = '';
-            }
+        addItem(userData) {
+          if (!userData) return;
 
-            addItem(userData) {
-                if (!userData) return;
-                
-                const itemDiv = utils.createElement('div', 'p-4 border-b border-gray-200 hover:bg-gray-50');
-                itemDiv.innerHTML = `
+          const itemDiv = utils.createElement(
+            'div',
+            'p-4 border-b border-gray-200 hover:bg-gray-50'
+          );
+          itemDiv.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div>
                             <a href="${userData.href}" 
@@ -121,107 +147,124 @@
                         <div class="text-sm text-gray-500">↗</div>
                     </div>
                 `;
-                this.container.appendChild(itemDiv);
-            }
-
-            showEmpty() {
-                this.container.innerHTML = '<div class="p-4 text-gray-600">No users found</div>';
-            }
+          this.container.appendChild(itemDiv);
         }
 
-        // Relationships Analyzer Class
-        class RelationshipsAnalyzer {
-            constructor() {
-                this.followers = new DataDisplayComponent('followersList');
-                this.following = new DataDisplayComponent('followingList');
-                this.notFollowingMe = new DataDisplayComponent('notFollowingMeList');
-                this.notFollowingBack = new DataDisplayComponent('notFollowingBackList');
-                this.stats = new StatsComponent();
-                
-                this.followersData = [];
-                this.followingData = [];
-            }
+        showEmpty() {
+          this.container.innerHTML =
+            '<div class="p-4 text-gray-600">No users found</div>';
+        }
+      }
 
-            analyze(followersData, followingData) {
-                this.followersData = followersData;
-                this.followingData = followingData;
+      // Relationships Analyzer Class
+      class RelationshipsAnalyzer {
+        constructor() {
+          this.followers = new DataDisplayComponent('followersList');
+          this.following = new DataDisplayComponent('followingList');
+          this.notFollowingMe = new DataDisplayComponent('notFollowingMeList');
+          this.notFollowingBack = new DataDisplayComponent(
+            'notFollowingBackList'
+          );
+          this.stats = new StatsComponent();
 
-                const followerUsernames = this.extractUsernames(followersData);
-                const followingUsernames = this.extractUsernames(followingData);
-
-                const notFollowingMeBack = utils.compareArrays(followingUsernames, followerUsernames);
-                const notFollowingBack = utils.compareArrays(followerUsernames, followingUsernames);
-
-                // Update stats
-                this.stats.update({
-                    'Followers': followerUsernames.length,
-                    'Following': followingUsernames.length,
-                    'Not Following Me': notFollowingMeBack.length,
-                    'I\'m Not Following': notFollowingBack.length
-                });
-
-                // Display all lists
-                this.displayList(this.followers, followersData);
-                this.displayList(this.following, followingData);
-                this.displayFilteredList(this.notFollowingMe, followingData, notFollowingMeBack);
-                this.displayFilteredList(this.notFollowingBack, followersData, notFollowingBack);
-            }
-
-            extractUsernames(data) {
-                return data
-                    .map(item => utils.getUserData(item))
-                    .filter(Boolean)
-                    .map(utils.getUserName);
-            }
-
-            displayList(component, data) {
-                component.clear();
-                if (!data?.length) {
-                    component.showEmpty();
-                    return;
-                }
-
-                data.forEach(item => {
-                    const userData = utils.getUserData(item);
-                    if (userData) {
-                        component.addItem(userData);
-                    }
-                });
-            }
-
-            displayFilteredList(component, data, usernamesToInclude) {
-                component.clear();
-                if (!usernamesToInclude?.length) {
-                    component.showEmpty();
-                    return;
-                }
-
-                const usernameSet = new Set(usernamesToInclude);
-                data.forEach(item => {
-                    const userData = utils.getUserData(item);
-                    if (userData && usernameSet.has(userData.value)) {
-                        component.addItem(userData);
-                    }
-                });
-            }
+          this.followersData = [];
+          this.followingData = [];
         }
 
-        // Main App Class
-        class InstagramDataViewer {
-            constructor() {
-                this.status = new StatusComponent();
-                this.analyzer = new RelationshipsAnalyzer();
-                this.setupUpload();
-            }
+        analyze(followersData, followingData) {
+          this.followersData = followersData;
+          this.followingData = followingData;
 
-            setupUpload() {
-                const uploadSection = document.getElementById('uploadSection');
-                uploadSection.innerHTML = `
+          const followerUsernames = this.extractUsernames(followersData);
+          const followingUsernames = this.extractUsernames(followingData);
+
+          const notFollowingMeBack = utils.compareArrays(
+            followingUsernames,
+            followerUsernames
+          );
+          const notFollowingBack = utils.compareArrays(
+            followerUsernames,
+            followingUsernames
+          );
+
+          // Update stats
+          this.stats.update({
+            Followers: followerUsernames.length,
+            Following: followingUsernames.length,
+            'Not Following Me': notFollowingMeBack.length,
+            "I'm Not Following": notFollowingBack.length,
+          });
+
+          // Display all lists
+          this.displayList(this.followers, followersData);
+          this.displayList(this.following, followingData);
+          this.displayFilteredList(
+            this.notFollowingMe,
+            followingData,
+            notFollowingMeBack
+          );
+          this.displayFilteredList(
+            this.notFollowingBack,
+            followersData,
+            notFollowingBack
+          );
+        }
+
+        extractUsernames(data) {
+          return data
+            .map((item) => utils.getUserData(item))
+            .filter(Boolean)
+            .map(utils.getUserName);
+        }
+
+        displayList(component, data) {
+          component.clear();
+          if (!data?.length) {
+            component.showEmpty();
+            return;
+          }
+
+          data.forEach((item) => {
+            const userData = utils.getUserData(item);
+            if (userData) {
+              component.addItem(userData);
+            }
+          });
+        }
+
+        displayFilteredList(component, data, usernamesToInclude) {
+          component.clear();
+          if (!usernamesToInclude?.length) {
+            component.showEmpty();
+            return;
+          }
+
+          const usernameSet = new Set(usernamesToInclude);
+          data.forEach((item) => {
+            const userData = utils.getUserData(item);
+            if (userData && usernameSet.has(userData.value)) {
+              component.addItem(userData);
+            }
+          });
+        }
+      }
+
+      // Main App Class
+      class InstagramDataViewer {
+        constructor() {
+          this.status = new StatusComponent();
+          this.analyzer = new RelationshipsAnalyzer();
+          this.setupUpload();
+        }
+
+        setupUpload() {
+          const uploadSection = document.getElementById('uploadSection');
+          uploadSection.innerHTML = `
                     <div id="dropZone" class="border-4 border-dashed border-gray-300 rounded-lg p-8 mb-8 text-center hover:border-blue-500 transition-colors">
+                      <div class="text-gray-600 ">
+                          Drag and drop your Instagram data ZIP file here or
+                      </div>
                         <div class="space-y-4">
-                            <div class="text-gray-600">
-                                Drag and drop your Instagram data ZIP file here or
-                            </div>
                             <label class="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600 transition-colors">
                                 Choose File
                                 <input type="file" id="fileInput" class="hidden" accept=".zip">
@@ -230,88 +273,115 @@
                     </div>
                 `;
 
-                this.setupDropZone();
-            }
-
-            setupDropZone() {
-                const dropZone = document.getElementById('dropZone');
-                const fileInput = document.getElementById('fileInput');
-
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, e => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    });
-                });
-
-                ['dragenter', 'dragover'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, () => dropZone.classList.add('border-blue-500'));
-                });
-
-                ['dragleave', 'drop'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, () => dropZone.classList.remove('border-blue-500'));
-                });
-
-                dropZone.addEventListener('drop', e => this.processFile(e.dataTransfer.files[0]));
-                fileInput.addEventListener('change', e => this.processFile(e.target.files[0]));
-            }
-
-            async processFile(file) {
-                if (!file || file.type !== 'application/zip') {
-                    this.status.showMessage('Please upload a ZIP file', 'error');
-                    return;
-                }
-
-                this.status.showMessage('Processing file...', 'processing');
-
-                try {
-                    const zip = new JSZip();
-                    const contents = await zip.loadAsync(file);
-                    
-                    const followersData = await this.extractFileData(contents, 'followers_1.json', 'followers');
-                    const followingData = await this.extractFileData(contents, 'following.json', 'following');
-
-                    this.analyzer.analyze(followersData, followingData);
-                    this.status.showMessage('Successfully processed the data', 'success');
-                } catch (error) {
-                    this.status.showMessage('Error processing file: ' + error.message, 'error');
-                }
-            }
-
-            async extractFileData(contents, targetFile, type) {
-                const file = Object.keys(contents.files)
-                    .find(path => path.endsWith(targetFile));
-                
-                if (!file) {
-                    throw new Error(`${targetFile} not found in zip`);
-                }
-
-                const content = await contents.files[file].async('string');
-                const data = JSON.parse(content);
-                return utils.dataExtractors[type](data);
-            }
+          this.setupDropZone();
         }
 
-        // Status Component
-        class StatusComponent {
-            constructor() {
-                this.container = document.getElementById('statusSection');
-            }
+        setupDropZone() {
+          const dropZone = document.getElementById('dropZone');
+          const fileInput = document.getElementById('fileInput');
 
-            showMessage(message, type) {
-                this.container.innerHTML = `
+          ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(
+            (eventName) => {
+              dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              });
+            }
+          );
+
+          ['dragenter', 'dragover'].forEach((eventName) => {
+            dropZone.addEventListener(eventName, () =>
+              dropZone.classList.add('border-blue-500')
+            );
+          });
+
+          ['dragleave', 'drop'].forEach((eventName) => {
+            dropZone.addEventListener(eventName, () =>
+              dropZone.classList.remove('border-blue-500')
+            );
+          });
+
+          dropZone.addEventListener('drop', (e) =>
+            this.processFile(e.dataTransfer.files[0])
+          );
+          fileInput.addEventListener('change', (e) =>
+            this.processFile(e.target.files[0])
+          );
+        }
+
+        async processFile(file) {
+          if (!file || file.type !== 'application/zip') {
+            this.status.showMessage('Please upload a ZIP file', 'error');
+            return;
+          }
+
+          this.status.showMessage('Processing file...', 'processing');
+
+          try {
+            const zip = new JSZip();
+            const contents = await zip.loadAsync(file);
+
+            const followersData = await this.extractFileData(
+              contents,
+              'followers_1.json',
+              'followers'
+            );
+            const followingData = await this.extractFileData(
+              contents,
+              'following.json',
+              'following'
+            );
+
+            this.analyzer.analyze(followersData, followingData);
+            this.status.showMessage(
+              'Successfully processed the data',
+              'success'
+            );
+          } catch (error) {
+            this.status.showMessage(
+              'Error processing file: ' + error.message,
+              'error'
+            );
+          }
+        }
+
+        async extractFileData(contents, targetFile, type) {
+          const file = Object.keys(contents.files).find((path) =>
+            path.endsWith(targetFile)
+          );
+
+          if (!file) {
+            throw new Error(`${targetFile} not found in zip`);
+          }
+
+          const content = await contents.files[file].async('string');
+          const data = JSON.parse(content);
+          return utils.dataExtractors[type](data);
+        }
+      }
+
+      // Status Component
+      class StatusComponent {
+        constructor() {
+          this.container = document.getElementById('statusSection');
+        }
+
+        showMessage(message, type) {
+          this.container.innerHTML = `
                     <div class="p-4 rounded ${
-                        type === 'error' ? 'bg-red-100 text-red-700' :
-                        type === 'success' ? 'bg-green-100 text-green-700' :
-                        'bg-blue-100 text-blue-700'
+                      type === 'error'
+                        ? 'bg-red-100 text-red-700'
+                        : type === 'success'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-blue-100 text-blue-700'
                     }">${message}</div>
                 `;
-                this.container.classList.remove('hidden');
-            }
+          this.container.classList.remove('hidden');
         }
+      }
 
-        // Initialize the app
-        new InstagramDataViewer();
+      // Initialize the app
+      new InstagramDataViewer();
     </script>
-</body>
+  </body>
 </html>
