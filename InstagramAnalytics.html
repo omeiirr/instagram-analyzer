@@ -31,13 +31,17 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
         <!-- Followers Section -->
         <div class="bg-white rounded-lg shadow-lg p-4">
-          <h2 class="text-xl text-center font-semibold mb-4 text-gray-800">Followers</h2>
+          <h2 class="text-xl text-center font-semibold mb-4 text-gray-800">
+            Followers
+          </h2>
           <div id="followersList" class="overflow-y-auto h-[500px] pr-2"></div>
         </div>
 
         <!-- Following Section -->
         <div class="bg-white rounded-lg shadow-lg p-4">
-          <h2 class="text-xl text-center mb-4 text-gray-800">Following</h2>
+          <h2 class="text-xl text-center font-semibold mb-4 text-gray-800">
+            Following
+          </h2>
           <div id="followingList" class="overflow-y-auto h-[500px] pr-2"></div>
         </div>
 
@@ -71,7 +75,28 @@
         formatDate: (timestamp) => {
           const date = new Date(timestamp * 1000);
           const options = { day: '2-digit', month: 'short', year: 'numeric' };
-          return date.toLocaleDateString('en-GB', options);
+          const formattedDate = date.toLocaleDateString('en-GB', options);
+
+          const now = new Date();
+          const diffInMs = now - date;
+          const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+          let years = Math.floor(diffInDays / 365);
+          let remainingDays = diffInDays % 365;
+          let months = Math.floor(remainingDays / 30);
+          let days = remainingDays % 30;
+
+          let timeLapsed;
+
+          if (years > 0) {
+            timeLapsed = `${years} years, ${months} months`;
+          } else if (months > 0) {
+            timeLapsed = `${months} months, ${days} days`;
+          } else {
+            timeLapsed = `${days} days`;
+          }
+
+          return `${formattedDate} (${timeLapsed} ago)`;
         },
         createElement: (tag, className = '') => {
           const element = document.createElement(tag);
@@ -130,7 +155,7 @@
 
           const itemDiv = utils.createElement(
             'div',
-            'p-4 border-b border-gray-200 hover:bg-gray-50'
+            'p-2 border-b border-gray-200 hover:bg-gray-50'
           );
           itemDiv.innerHTML = `
                     <div class="flex items-center justify-between">
