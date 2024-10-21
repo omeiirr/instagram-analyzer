@@ -16,6 +16,27 @@
       <!-- File Upload Section -->
       <div id="uploadSection"></div>
 
+      <!-- Search Section -->
+      <div id="searchSection" class="mb-8 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-4">
+          <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Search for a username..."
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <!-- Search Results -->
+          <div id="searchResults" class="mt-4 hidden">
+            <div class="p-4 rounded-lg border"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Status Section -->
       <div id="statusSection" class="mb-8 hidden"></div>
 
@@ -31,11 +52,11 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
         <!-- Followers Section -->
         <div class="bg-white rounded-lg shadow-lg p-2 sm:p-4">
-            <h2 class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800">
+          <h2
+            class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800"
+          >
             Followers 🧙‍♂️
           </h2>
-          
-        </div>
           <div
             id="followersList"
             class="overflow-y-auto h-[250px] sm:h-[500px] pr-2"
@@ -84,6 +105,12 @@
     </div>
 
     <script>
+      // Global data store
+      const globalDataStore = {
+        followers: null,
+        following: null,
+      };
+
       // Utility functions
       const utils = {
         formatDate: (timestamp) => {
@@ -118,6 +145,60 @@
 
           return `${formattedDate} (${timeLapsed} ago)`;
         },
+
+        getRelationshipStatus: (username, followersData, followingData) => {
+          const isFollower = followersData.some((item) => {
+            const userData = utils.getUserData(item);
+            return (
+              userData &&
+              userData.value.toLowerCase() === username.toLowerCase()
+            );
+          });
+
+          const isFollowing = followingData.some((item) => {
+            const userData = utils.getUserData(item);
+            return (
+              userData &&
+              userData.value.toLowerCase() === username.toLowerCase()
+            );
+          });
+
+          if (isFollower && isFollowing) {
+            return {
+              status: 'mutual',
+              message: 'You both follow each other ',
+              class: 'bg-green-100 text-green-800',
+            };
+          } else if (isFollower) {
+            return {
+              status: 'follower',
+              message: "They follow you, but you don't follow them",
+              class: 'bg-yellow-100 text-yellow-800',
+            };
+          } else if (isFollowing) {
+            return {
+              status: 'following',
+              message: "You follow them, but they don't follow you",
+              class: 'bg-orange-100 text-orange-800',
+            };
+          } else {
+            return {
+              status: 'none',
+              message: 'No relationship',
+              class: 'bg-gray-100 text-gray-800',
+            };
+          }
+        },
+
+        getUserDetails: (username, data) => {
+          return data.find((item) => {
+            const userData = utils.getUserData(item);
+            return (
+              userData &&
+              userData.value.toLowerCase() === username.toLowerCase()
+            );
+          });
+        },
         createElement: (tag, className = '') => {
           const element = document.createElement(tag);
           if (className) element.className = className;
@@ -135,6 +216,73 @@
         },
       };
 
+      // Add search functionality
+      function searchUser() {
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const username = searchInput.value.trim();
+
+        if (!username) {
+          //   alert('Please enter a username to search');
+          searchResults.classList.remove('hidden');
+          searchResults.querySelector('div').innerHTML = `
+          <div class="flex flex-col gap-2">
+            <div class="text-lg font-semibold">
+                Enter a username to search            
+            </div>
+            <div class="p-2 rounded-lg ${relationshipStatus.class}">
+                Bleh
+            </div>
+          </div>
+        `;
+          return;
+        }
+
+        if (!globalDataStore.followers || !globalDataStore.following) {
+          alert('Please upload your Instagram data first');
+          return;
+        }
+
+        const relationshipStatus = utils.getRelationshipStatus(
+          username,
+          globalDataStore.followers,
+          globalDataStore.following
+        );
+
+        const userInFollowers = utils.getUserDetails(
+          username,
+          globalDataStore.followers
+        );
+        const userInFollowing = utils.getUserDetails(
+          username,
+          globalDataStore.following
+        );
+        const userData = utils.getUserData(userInFollowers || userInFollowing);
+
+        searchResults.classList.remove('hidden');
+        searchResults.querySelector('div').innerHTML = `
+          <div class="flex flex-col gap-2">
+            <div class="text-md sm:text-lg font-semibold">
+              ${userData ? `@${userData.value}` : `@${username}`}
+            </div>
+            <div class="p-2 text-sm sm:text-md rounded-lg ${
+              relationshipStatus.class
+            }">
+              ${relationshipStatus.message}
+            </div>
+            ${
+              userData
+                ? `
+              <div class="text-xs sm:text-sm text-gray-600">
+                Relationship since: ${utils.formatDate(userData.timestamp)}
+              </div>
+            `
+                : ''
+            }
+          </div>
+        `;
+      }
+
       // Stats Component
       class StatsComponent {
         constructor() {
@@ -149,11 +297,11 @@
           this.container.innerHTML = Object.entries(stats)
             .map(
               ([key, value]) => `
-                    <div class="bg-white rounded-lg shadow p-4">
-                        <div class="text-lg text-center sm:text-2xl font-bold text-gray-800">${value}</div>
-                        <div class="text-xs text-center text-gray-600">${key}</div>
-                    </div>
-                `
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="text-lg text-center sm:text-2xl font-bold text-gray-800">${value}</div>
+                    <div class="text-xs text-center text-gray-600">${key}</div>
+                </div>
+              `
             )
             .join('');
           this.show();
@@ -178,20 +326,20 @@
             'p-2 border-b border-gray-200 hover:bg-gray-50'
           );
           itemDiv.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <a href="${userData.href}" 
-                               target="_blank" 
-                               class="text-blue-600 text-xs sm:text-lg hover:text-blue-800 font-medium">
-                                @${userData.value}
-                            </a>
-                            <div class="text-xs sm:text-sm text-gray-500">
-                                Since: ${utils.formatDate(userData.timestamp)}
-                            </div>
-                        </div>
-                        <div class="text-xs sm:text-sm text-gray-500">↗</div>
+            <div class="flex items-center justify-between">
+                <div>
+                    <a href="https://instagram.com/${userData.value}" 
+                       target="_blank" 
+                       class="text-blue-600 text-xs sm:text-lg hover:text-blue-800 font-medium">
+                        @${userData.value}
+                    </a>
+                    <div class="text-xs sm:text-sm text-gray-500">
+                        Since: ${utils.formatDate(userData.timestamp)}
                     </div>
-                `;
+                </div>
+                <div class="text-xs sm:text-sm text-gray-500">↗</div>
+            </div>
+          `;
           this.container.appendChild(itemDiv);
         }
 
@@ -211,15 +359,9 @@
             'notFollowingBackList'
           );
           this.stats = new StatsComponent();
-
-          this.followersData = [];
-          this.followingData = [];
         }
 
         analyze(followersData, followingData) {
-          this.followersData = followersData;
-          this.followingData = followingData;
-
           const followerUsernames = this.extractUsernames(followersData);
           const followingUsernames = this.extractUsernames(followingData);
 
@@ -301,22 +443,21 @@
           this.analyzer = new RelationshipsAnalyzer();
           this.setupUpload();
         }
-
         setupUpload() {
           const uploadSection = document.getElementById('uploadSection');
           uploadSection.innerHTML = `
-                    <div id="dropZone" class="border-4 border-dashed border-gray-300 rounded-lg p-4 sm:p-8 text-sm sm:text-lg mb-8 text-center hover:border-blue-500 transition-colors">
-                      <div class="text-gray-600 mb-4">
-                          Drag and drop your Instagram data ZIP file here or
-                      </div>
-                        <div class="space-y-4">
-                            <label class="bg-blue-500 text-sm sm:text-lg text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600 transition-colors">
-                                Choose File
-                                <input type="file" id="fileInput" class="hidden" accept=".zip">
-                            </label>
-                        </div>
-                    </div>
-                `;
+            <div id="dropZone" class="border-4 border-dashed border-gray-300 rounded-lg p-4 sm:p-8 text-sm sm:text-lg mb-8 text-center hover:border-blue-500 transition-colors">
+              <div class="text-gray-600 mb-4">
+                Drag and drop your Instagram data ZIP file here or
+              </div>
+              <div class="space-y-4">
+                <label class="bg-blue-500 text-sm sm:text-lg text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600 transition-colors">
+                  Choose File
+                  <input type="file" id="fileInput" class="hidden" accept=".zip">
+                </label>
+              </div>
+            </div>
+          `;
 
           this.setupDropZone();
         }
@@ -377,6 +518,13 @@
               'following'
             );
 
+            // Store the data globally
+            globalDataStore.followers = followersData;
+            globalDataStore.following = followingData;
+
+            // Show search section after successful file processing
+            document.getElementById('searchSection').classList.remove('hidden');
+
             this.analyzer.analyze(followersData, followingData);
             this.status.showMessage(
               'Successfully processed the data',
@@ -413,20 +561,25 @@
 
         showMessage(message, type) {
           this.container.innerHTML = `
-                    <div class="p-4 rounded ${
-                      type === 'error'
-                        ? 'bg-red-100 text-red-700'
-                        : type === 'success'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-blue-100 text-blue-700'
-                    }">${message}</div>
-                `;
+            <div class="p-4 rounded ${
+              type === 'error'
+                ? 'bg-red-100 text-red-700'
+                : type === 'success'
+                ? 'bg-green-100 text-green-700'
+                : 'bg-blue-100 text-blue-700'
+            }">${message}</div>
+          `;
           this.container.classList.remove('hidden');
         }
       }
 
       // Initialize the app
       new InstagramDataViewer();
+
+      // Add event listener for Enter key in search input
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        searchUser();
+      });
     </script>
   </body>
 </html>
