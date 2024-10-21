@@ -22,7 +22,7 @@
       <!-- Stats Summary -->
       <div
         id="statsSummary"
-        class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 hidden"
+        class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-8 hidden"
       >
         <!-- Will be filled dynamically -->
       </div>
@@ -31,24 +31,36 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
         <!-- Followers Section -->
         <div class="bg-white rounded-lg shadow-lg p-2 sm:p-4">
-          <h2 class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800">
-            Followers
+            <h2 class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800">
+            Followers 🧙‍♂️
           </h2>
-          <div id="followersList" class="overflow-y-auto h-[250px] sm:h-[500px] pr-2"></div>
+          
+        </div>
+          <div
+            id="followersList"
+            class="overflow-y-auto h-[250px] sm:h-[500px] pr-2"
+          ></div>
         </div>
 
         <!-- Following Section -->
         <div class="bg-white rounded-lg shadow-lg p-2 sm:p-4">
-          <h2 class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800">
-            Following
+          <h2
+            class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800"
+          >
+            Following 🔍
           </h2>
-          <div id="followingList" class="overflow-y-auto h-[250px] sm:h-[500px] pr-2"></div>
+          <div
+            id="followingList"
+            class="overflow-y-auto h-[250px] sm:h-[500px] pr-2"
+          ></div>
         </div>
 
         <!-- Not Following Me Back Section -->
         <div class="bg-white rounded-lg shadow-lg p-2 sm:p-4">
-          <h2 class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800">
-            Not Following Me Back
+          <h2
+            class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800"
+          >
+            Not Following Me Back ⁉️
           </h2>
           <div
             id="notFollowingMeList"
@@ -58,8 +70,10 @@
 
         <!-- Not Following Back Section -->
         <div class="bg-white rounded-lg shadow-lg p-2 sm:p-4">
-          <h2 class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800">
-            I'm Not Following Back
+          <h2
+            class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800"
+          >
+            I'm Not Following Back 😶‍🌫️
           </h2>
           <div
             id="notFollowingBackList"
@@ -86,14 +100,20 @@
           let months = Math.floor(remainingDays / 30);
           let days = remainingDays % 30;
 
-          let timeLapsed;
+          let timeLapsed = '';
 
           if (years > 0) {
-            timeLapsed = `${years} years, ${months} months`;
+            timeLapsed = `${years} year${years > 1 ? 's' : ''}`;
+            if (months > 0) {
+              timeLapsed += `, ${months} month${months > 1 ? 's' : ''}`;
+            }
           } else if (months > 0) {
-            timeLapsed = `${months} months, ${days} days`;
+            timeLapsed = `${months} month${months > 1 ? 's' : ''}`;
+            if (days > 0) {
+              timeLapsed += `, ${days} day${days > 1 ? 's' : ''}`;
+            }
           } else {
-            timeLapsed = `${days} days`;
+            timeLapsed = `${days} day${days > 1 ? 's' : ''}`;
           }
 
           return `${formattedDate} (${timeLapsed} ago)`;
@@ -130,8 +150,8 @@
             .map(
               ([key, value]) => `
                     <div class="bg-white rounded-lg shadow p-4">
-                        <div class="text-2xl font-bold text-gray-800">${value}</div>
-                        <div class="text-gray-600">${key}</div>
+                        <div class="text-lg text-center sm:text-2xl font-bold text-gray-800">${value}</div>
+                        <div class="text-xs text-center text-gray-600">${key}</div>
                     </div>
                 `
             )
@@ -162,7 +182,7 @@
                         <div>
                             <a href="${userData.href}" 
                                target="_blank" 
-                               class="text-blue-600 text-xs sm:text-md hover:text-blue-800 font-medium">
+                               class="text-blue-600 text-xs sm:text-lg hover:text-blue-800 font-medium">
                                 @${userData.value}
                             </a>
                             <div class="text-xs sm:text-sm text-gray-500">
