@@ -6,7 +6,11 @@
     <title>Instagram Relationships Analyzer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.counter.dev/script.js" data-id="dd8ba715-b9f5-42a8-97e5-98fe378779f8" data-utcoffset="6"></script>
+    <script
+      src="https://cdn.counter.dev/script.js"
+      data-id="dd8ba715-b9f5-42a8-97e5-98fe378779f8"
+      data-utcoffset="6"
+    ></script>
   </head>
   <body class="bg-gray-100 min-h-screen p-4 sm:p-8">
     <div class="max-w-7xl mx-auto">
@@ -62,7 +66,7 @@
       <!-- Stats Summary -->
       <div
         id="statsSummary"
-        class="grid grid-cols-2 sm:grid-cols-5 gap-4 sm:gap-6 mb-8 hidden"
+        class="grid grid-cols-2 sm:grid-cols-6 gap-4 sm:gap-6 mb-8 hidden"
       >
         <!-- Will be filled dynamically -->
       </div>
@@ -126,10 +130,23 @@
           <h2
             class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800"
           >
-            Pending Follow Requests 🕒
+            Sent Follow Requests 🕒
           </h2>
           <div
             id="pendingRequestsList"
+            class="overflow-y-auto h-[250px] sm:h-[500px] pr-2"
+          ></div>
+        </div>
+
+        <!-- Received Follow Requests Section -->
+        <div class="bg-white rounded-lg shadow-lg p-2 sm:p-4">
+          <h2
+            class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800"
+          >
+            Received Follow Requests 📩
+          </h2>
+          <div
+            id="receivedRequestsList"
             class="overflow-y-auto h-[250px] sm:h-[500px] pr-2"
           ></div>
         </div>
@@ -241,6 +258,8 @@
           following: (data) => data.relationships_following || [],
           pendingRequests: (data) =>
             data.relationships_follow_requests_sent || [],
+          receivedRequests: (data) =>
+            data.relationships_follow_requests_received || [],
         },
         getUserData: (item) => item.string_list_data?.[0] || null,
         getUserName: (userData) => userData.value,
@@ -395,15 +414,26 @@
           this.pendingRequests = new DataDisplayComponent(
             'pendingRequestsList'
           );
+          this.receivedRequests = new DataDisplayComponent(
+            'receivedRequestsList'
+          );
           this.stats = new StatsComponent();
         }
 
-        analyze(followersData, followingData, pendingRequestsData) {
+        analyze(
+          followersData,
+          followingData,
+          pendingRequestsData,
+          receivedRequestsData
+        ) {
           // Use the method directly from the instance
           const followerUsernames = this.extractUsernames(followersData);
           const followingUsernames = this.extractUsernames(followingData);
           const pendingUsernames = pendingRequestsData
             ? this.extractUsernames(pendingRequestsData)
+            : [];
+          const receivedUsernames = receivedRequestsData
+            ? this.extractUsernames(receivedRequestsData)
             : [];
 
           const notFollowingMeBack = utils.compareArrays(
@@ -421,13 +451,16 @@
             Following: followingUsernames.length,
             'Not Following Me': notFollowingMeBack.length,
             "I'm Not Following": notFollowingBack.length,
-            'Pending Requests': pendingUsernames.length,
+            'Requests Sent': pendingUsernames.length,
+            'Requests Received': receivedUsernames.length,
           });
 
           // Display all lists
           this.displayList(this.followers, followersData);
           this.displayList(this.following, followingData);
           this.displayList(this.pendingRequests, pendingRequestsData);
+          this.displayList(this.receivedRequests, receivedRequestsData);
+
           this.displayFilteredList(
             this.notFollowingMe,
             followingData,
@@ -567,10 +600,17 @@
               'pendingRequests'
             );
 
+            const receivedRequestsData = await this.extractFileData(
+              contents,
+              "follow_requests_you've_received.json",
+              'receivedRequests'
+            );
+
             // Store the data globally
             globalDataStore.followers = followersData;
             globalDataStore.following = followingData;
             globalDataStore.pendingRequests = pendingRequestsData;
+            globalDataStore.receivedRequests = receivedRequestsData;
 
             // Show search section after successful file processing
             document.getElementById('searchSection').classList.remove('hidden');
@@ -578,7 +618,8 @@
             this.analyzer.analyze(
               followersData,
               followingData,
-              pendingRequestsData
+              pendingRequestsData,
+              receivedRequestsData
             );
             this.status.showMessage(
               'Successfully processed the data',
