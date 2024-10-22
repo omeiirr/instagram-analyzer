@@ -590,9 +590,9 @@
             path.endsWith(targetFile)
           );
 
-          if (!file) {
-            throw new Error(`${targetFile} not found in zip`);
-          }
+          // if (!file) {
+          //   throw new Error(`${targetFile} not found in zip`);
+          // }
 
           const content = await contents.files[file].async('string');
           const data = JSON.parse(content);
