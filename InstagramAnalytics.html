@@ -596,9 +596,17 @@
             path.endsWith(targetFile)
           );
 
-          // if (!file) {
-          //   throw new Error(`${targetFile} not found in zip`);
-          // }
+          // Special handling for pending requests - return empty array if missing
+          if (!file && type === 'pendingRequests') {
+            console.log(
+              'Pending requests file not found, returning empty array'
+            );
+            return [];
+          }
+
+          if (!file) {
+            throw new Error(`${targetFile} not found in zip`);
+          }
 
           const content = await contents.files[file].async('string');
           const data = JSON.parse(content);
