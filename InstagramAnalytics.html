@@ -55,7 +55,7 @@
       <!-- Stats Summary -->
       <div
         id="statsSummary"
-        class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-8 hidden"
+        class="grid grid-cols-2 sm:grid-cols-5 gap-4 sm:gap-6 mb-8 hidden"
       >
         <!-- Will be filled dynamically -->
       </div>
@@ -110,6 +110,19 @@
           </h2>
           <div
             id="notFollowingBackList"
+            class="overflow-y-auto h-[250px] sm:h-[500px] pr-2"
+          ></div>
+        </div>
+
+        <!-- Pending Follow Requests Section -->
+        <div class="bg-white rounded-lg shadow-lg p-2 sm:p-4">
+          <h2
+            class="text-md sm:text-xl text-center font-semibold mb-4 text-gray-800"
+          >
+            Pending Follow Requests 🕒
+          </h2>
+          <div
+            id="pendingRequestsList"
             class="overflow-y-auto h-[250px] sm:h-[500px] pr-2"
           ></div>
         </div>
@@ -219,6 +232,8 @@
         dataExtractors: {
           followers: (data) => (Array.isArray(data) ? data : []),
           following: (data) => data.relationships_following || [],
+          pendingRequests: (data) =>
+            data.relationships_follow_requests_sent || [],
         },
         getUserData: (item) => item.string_list_data?.[0] || null,
         getUserName: (userData) => userData.value,
@@ -370,12 +385,19 @@
           this.notFollowingBack = new DataDisplayComponent(
             'notFollowingBackList'
           );
+          this.pendingRequests = new DataDisplayComponent(
+            'pendingRequestsList'
+          );
           this.stats = new StatsComponent();
         }
 
-        analyze(followersData, followingData) {
+        analyze(followersData, followingData, pendingRequestsData) {
+          // Use the method directly from the instance
           const followerUsernames = this.extractUsernames(followersData);
           const followingUsernames = this.extractUsernames(followingData);
+          const pendingUsernames = pendingRequestsData
+            ? this.extractUsernames(pendingRequestsData)
+            : [];
 
           const notFollowingMeBack = utils.compareArrays(
             followingUsernames,
@@ -392,11 +414,13 @@
             Following: followingUsernames.length,
             'Not Following Me': notFollowingMeBack.length,
             "I'm Not Following": notFollowingBack.length,
+            'Pending Requests': pendingUsernames.length,
           });
 
           // Display all lists
           this.displayList(this.followers, followersData);
           this.displayList(this.following, followingData);
+          this.displayList(this.pendingRequests, pendingRequestsData);
           this.displayFilteredList(
             this.notFollowingMe,
             followingData,
@@ -410,6 +434,7 @@
         }
 
         extractUsernames(data) {
+          if (!data) return [];
           return data
             .map((item) => utils.getUserData(item))
             .filter(Boolean)
@@ -529,15 +554,25 @@
               'following.json',
               'following'
             );
+            const pendingRequestsData = await this.extractFileData(
+              contents,
+              'pending_follow_requests.json',
+              'pendingRequests'
+            );
 
             // Store the data globally
             globalDataStore.followers = followersData;
             globalDataStore.following = followingData;
+            globalDataStore.pendingRequests = pendingRequestsData;
 
             // Show search section after successful file processing
             document.getElementById('searchSection').classList.remove('hidden');
 
-            this.analyzer.analyze(followersData, followingData);
+            this.analyzer.analyze(
+              followersData,
+              followingData,
+              pendingRequestsData
+            );
             this.status.showMessage(
               'Successfully processed the data',
               'success'
