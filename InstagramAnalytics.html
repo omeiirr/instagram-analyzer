@@ -641,7 +641,10 @@
           );
 
           // Special handling for pending requests - return empty array if missing
-          if (!file && type === 'pendingRequests') {
+          if (
+            !file &&
+            (type === 'pendingRequests' || type === 'receivedRequests')
+          ) {
             console.log(
               'Pending requests file not found, returning empty array'
             );
