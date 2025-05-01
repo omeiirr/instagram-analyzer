@@ -1,3 +1,6 @@
+![image](https://github.com/user-attachments/assets/6e37296e-8111-4e1d-bff1-37dd35e338c8)
+
+
 # 📝 How to Download Your Instagram Data
 
 ![1_OpenIGSettings](https://github.com/user-attachments/assets/37aebd9f-d392-46a5-9a28-a511e4a128ae)
